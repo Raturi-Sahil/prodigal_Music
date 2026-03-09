@@ -129,24 +129,24 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                     const SizedBox(height: 40),
                     // Logo
                     Container(
-                      width: 72,
-                      height: 72,
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
                         boxShadow: [
                           BoxShadow(
                             color:
-                                AppColors.primaryPurple.withValues(alpha: 0.4),
-                            blurRadius: 30,
+                                AppColors.primaryCyan.withValues(alpha: 0.3),
+                            blurRadius: 40,
                             spreadRadius: 5,
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.music_note_rounded,
-                        size: 36,
-                        color: Colors.white,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: Image.asset(
+                          'assets/images/dhanur_logo.jpeg',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),

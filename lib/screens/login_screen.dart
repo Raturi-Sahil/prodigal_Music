@@ -102,24 +102,24 @@ class _LoginScreenState extends State<LoginScreen>
                     const SizedBox(height: 50),
                     // Logo
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.primaryGradient,
                         boxShadow: [
                           BoxShadow(
                             color:
-                                AppColors.primaryPurple.withValues(alpha: 0.4),
-                            blurRadius: 30,
+                                AppColors.primaryCyan.withValues(alpha: 0.3),
+                            blurRadius: 40,
                             spreadRadius: 5,
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.music_note_rounded,
-                        size: 40,
-                        color: Colors.white,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/dhanur_logo.jpeg',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24),

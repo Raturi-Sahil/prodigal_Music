@@ -7,6 +7,7 @@ class AppColors {
   static const Color primaryPurple = Color(0xFF7B2FBE);
   static const Color primaryViolet = Color(0xFF9B59B6);
   static const Color primaryCyan = Color(0xFF00D2FF);
+  static const Color primaryMagenta = Color(0xFFE040FB);
   static const Color primaryBlue = Color(0xFF3A7BD5);
 
   // Background
@@ -38,7 +39,7 @@ class AppColors {
   );
 
   static const LinearGradient splashGradient = LinearGradient(
-    colors: [Color(0xFF0D0D1A), Color(0xFF1A0A2E), Color(0xFF0A1628)],
+    colors: [Color(0xFF0A0A18), Color(0xFF12082A), Color(0xFF0A1225)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

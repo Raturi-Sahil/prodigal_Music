@@ -75,30 +75,30 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App icon with glow effect
+              // App logo with glow effect
               Container(
-                width: 120,
-                height: 120,
+                width: 180,
+                height: 180,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: AppColors.primaryGradient,
                   boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryPurple.withValues(alpha: 0.5),
-                      blurRadius: 40,
-                      spreadRadius: 10,
-                    ),
                     BoxShadow(
                       color: AppColors.primaryCyan.withValues(alpha: 0.3),
                       blurRadius: 60,
+                      spreadRadius: 10,
+                    ),
+                    BoxShadow(
+                      color: AppColors.primaryMagenta.withValues(alpha: 0.2),
+                      blurRadius: 80,
                       spreadRadius: 5,
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.music_note_rounded,
-                  size: 56,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset(
+                    'assets/images/dhanur_logo.jpeg',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
