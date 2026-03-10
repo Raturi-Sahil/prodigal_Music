@@ -1,36 +1,50 @@
 import 'package:flutter/material.dart';
-import 'constants/app_colors.dart';
+import 'package:provider/provider.dart';
+import 'providers/music_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/main_shell.dart';
+import 'constants/app_colors.dart';
 
 void main() {
-  runApp(const DhanurAIApp());
+  runApp(const MyApp());
 }
 
-class DhanurAIApp extends StatelessWidget {
-  const DhanurAIApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Dhanur AI',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AppColors.background,
-        colorSchemeSeed: AppColors.primaryPurple,
-        useMaterial3: true,
-        fontFamily: 'Roboto',
+    return ChangeNotifierProvider(
+      create: (context) => MusicProvider(),
+      child: MaterialApp(
+        title: 'Dhanur Music',
+        theme: ThemeData(
+          brightness: Brightness.dark,
+          primaryColor: AppColors.primary,
+          scaffoldBackgroundColor: AppColors.background,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
+          ),
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.primary,
+            secondary: AppColors.primary,
+            surface: AppColors.surfaceDark,
+          ),
+          fontFamily: 'Roboto',
+          useMaterial3: true,
+        ),
+        home: const SplashScreen(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegistrationScreen(),
+          '/home': (context) => const MainShell(),
+        },
+        debugShowCheckedModeBanner: false,
       ),
-      home: const SplashScreen(),
-      routes: {
-        '/splash': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/register': (context) => const RegistrationScreen(),
-        '/home': (context) => const HomeScreen(),
-      },
     );
   }
 }
