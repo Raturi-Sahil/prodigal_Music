@@ -229,14 +229,14 @@ class _SearchScreenState extends State<SearchScreen> {
                           gradient: LinearGradient(
                             colors: [
                               color,
-                              color.withOpacity(0.7),
+                              color.withValues(alpha:0.7),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: color.withOpacity(0.3),
+                              color: color.withValues(alpha:0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -253,7 +253,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 height: 80,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha:0.1),
                                 ),
                               ),
                             ),
@@ -265,7 +265,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 height: 50,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white.withOpacity(0.08),
+                                  color: Colors.white.withValues(alpha:0.08),
                                 ),
                               ),
                             ),

@@ -36,7 +36,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha:0.5),
                           width: 2,
                         ),
                       ),
@@ -113,7 +113,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           border: Border.all(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.textHint.withOpacity(0.4),
+                                : AppColors.textHint.withValues(alpha:0.4),
                             width: 1,
                           ),
                         ),

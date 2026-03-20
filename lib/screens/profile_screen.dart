@@ -25,15 +25,15 @@ class ProfileScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withOpacity(0.8),
-                      AppColors.primary.withOpacity(0.3),
+                      AppColors.primary.withValues(alpha:0.8),
+                      AppColors.primary.withValues(alpha:0.3),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha:0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -112,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: AppColors.textHint.withOpacity(0.4),
+                      color: AppColors.textHint.withValues(alpha:0.4),
                     ),
                   ),
                   child: const Center(
@@ -177,7 +177,7 @@ class ProfileScreen extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: AppColors.surfaceLight.withOpacity(0.5),
+              color: AppColors.surfaceLight.withValues(alpha:0.5),
               width: 0.5,
             ),
           ),

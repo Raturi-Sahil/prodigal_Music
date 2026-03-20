@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../main.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -39,11 +40,27 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    });
+    _initAndNavigate();
+  }
+
+  Future<void> _initAndNavigate() async {
+    // Start audio init immediately (runs in background)
+    final audioInit = initAudioService().timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => debugPrint('AudioService.init() timed out'),
+    ).catchError((e) => debugPrint('Audio init error: $e'));
+
+    // Wait at least 2.5s for splash animation
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    // Wait for audio init to finish (up to 15s total)
+    await audioInit;
+
+    debugPrint('Audio initialized: ${audioHandler != null}');
+
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override
@@ -75,7 +92,6 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App logo with glow effect
               Container(
                 width: 180,
                 height: 180,
@@ -102,7 +118,6 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               const SizedBox(height: 32),
-              // App name
               ShaderMask(
                 shaderCallback: (bounds) =>
                     AppColors.primaryGradient.createShader(bounds),

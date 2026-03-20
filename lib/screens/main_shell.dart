@@ -52,10 +52,10 @@ class _MainShellState extends State<MainShell> {
                 // Bottom Navigation
                 Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background.withOpacity(0.95),
+                    color: AppColors.background.withValues(alpha:0.95),
                     border: Border(
                       top: BorderSide(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha:0.05),
                         width: 0.5,
                       ),
                     ),

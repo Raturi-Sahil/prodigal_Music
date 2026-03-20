@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/song.dart';
 import '../data/songs_data.dart';
+import '../main.dart' show audioHandler;
 
 class MusicProvider extends ChangeNotifier {
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  // Fallback player only used if audio_service fails to init
+  AudioPlayer? _fallbackPlayer;
 
   Song? _currentSong;
   bool _isPlaying = false;
@@ -14,6 +16,7 @@ class MusicProvider extends ChangeNotifier {
   bool _isRepeatOn = false;
   final Set<String> _likedSongs = {};
   int _currentIndex = -1;
+  DateTime _lastPositionNotify = DateTime.now();
 
   Song? get currentSong => _currentSong;
   bool get isPlaying => _isPlaying;
@@ -26,39 +29,71 @@ class MusicProvider extends ChangeNotifier {
 
   List<Song> get allSongs => SongsData.getAllSongs();
 
-  MusicProvider() {
-    AudioPlayer.global.setAudioContext(AudioContextConfig(
-      respectSilence: false,
-      stayAwake: true,
-    ).build());
+  /// Returns the handler's player if audio_service initialized, otherwise a fallback
+  AudioPlayer get _player {
+    if (audioHandler != null) return audioHandler!.player;
+    _fallbackPlayer ??= AudioPlayer();
+    return _fallbackPlayer!;
+  }
 
-    _audioPlayer.onPlayerStateChanged.listen((state) {
+  MusicProvider() {
+    // Defer listener setup to let audio_service init complete
+    Future.delayed(const Duration(seconds: 3), _setupListeners);
+  }
+
+  void _setupListeners() {
+    final player = _player;
+
+    player.onPlayerStateChanged.listen((state) {
       _isPlaying = state == PlayerState.playing;
       notifyListeners();
     });
 
-    _audioPlayer.onDurationChanged.listen((duration) {
+    player.onDurationChanged.listen((duration) {
       _totalDuration = duration;
       notifyListeners();
     });
 
-    _audioPlayer.onPositionChanged.listen((position) {
+    player.onPositionChanged.listen((position) {
       _currentPosition = position;
-      notifyListeners();
+      final now = DateTime.now();
+      if (now.difference(_lastPositionNotify).inMilliseconds > 500) {
+        _lastPositionNotify = now;
+        notifyListeners();
+      }
     });
 
-    _audioPlayer.onPlayerComplete.listen((_) {
+    player.onPlayerComplete.listen((_) {
       if (_isRepeatOn) {
-        // Replay current song
         if (_currentSong != null) {
-          _audioPlayer.play(
-            AssetSource(_currentSong!.audioPath.replaceFirst('assets/', '')),
-          );
+          _playCurrent();
         }
       } else {
         playNext();
       }
     });
+
+    // Setup notification skip callbacks
+    final handler = audioHandler;
+    if (handler != null) {
+      handler.onSkipToNext = () async => await playNext();
+      handler.onSkipToPrevious = () async => await playPrevious();
+    }
+  }
+
+  Future<void> _playCurrent() async {
+    if (_currentSong == null) return;
+    final assetPath = _currentSong!.audioPath.replaceFirst('assets/', '');
+    audioHandler?.setCurrentMediaItem(
+      title: _currentSong!.title,
+      artist: _currentSong!.artist,
+    );
+    if (audioHandler != null) {
+      await audioHandler!.playFromAsset(assetPath);
+    } else {
+      await _player.play(AssetSource(assetPath));
+    }
+    notifyListeners();
   }
 
   Future<void> playSong(Song song, {bool forcePlay = false}) async {
@@ -67,23 +102,42 @@ class MusicProvider extends ChangeNotifier {
     } else {
       _currentSong = song;
       _currentIndex = allSongs.indexWhere((s) => s.title == song.title);
-      await _audioPlayer.play(
-        AssetSource(song.audioPath.replaceFirst('assets/', '')),
+      final assetPath = song.audioPath.replaceFirst('assets/', '');
+      audioHandler?.setCurrentMediaItem(
+        title: song.title,
+        artist: song.artist,
       );
+      if (audioHandler != null) {
+        await audioHandler!.playFromAsset(assetPath);
+      } else {
+        await _player.play(AssetSource(assetPath));
+      }
       notifyListeners();
     }
   }
 
   Future<void> pause() async {
-    await _audioPlayer.pause();
+    if (audioHandler != null) {
+      await audioHandler!.pause();
+    } else {
+      await _player.pause();
+    }
   }
 
   Future<void> resume() async {
-    await _audioPlayer.resume();
+    if (audioHandler != null) {
+      await audioHandler!.play();
+    } else {
+      await _player.resume();
+    }
   }
 
   Future<void> seek(Duration position) async {
-    await _audioPlayer.seek(position);
+    if (audioHandler != null) {
+      await audioHandler!.seek(position);
+    } else {
+      await _player.seek(position);
+    }
   }
 
   void toggleShuffle() {
@@ -114,7 +168,6 @@ class MusicProvider extends ChangeNotifier {
     if (songs.isEmpty) return;
 
     if (_isShuffleOn) {
-      // Play random song
       final randomIndex = (songs.length > 1)
           ? (DateTime.now().millisecondsSinceEpoch % songs.length)
           : 0;
@@ -130,7 +183,6 @@ class MusicProvider extends ChangeNotifier {
     if (songs.isEmpty) return;
 
     if (_currentPosition.inSeconds > 3) {
-      // If more than 3 seconds in, restart current song
       await seek(Duration.zero);
     } else {
       _currentIndex = (_currentIndex - 1 + songs.length) % songs.length;
@@ -140,7 +192,7 @@ class MusicProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _audioPlayer.dispose();
+    _fallbackPlayer?.dispose();
     super.dispose();
   }
 }
