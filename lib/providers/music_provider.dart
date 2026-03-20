@@ -27,6 +27,11 @@ class MusicProvider extends ChangeNotifier {
   List<Song> get allSongs => SongsData.getAllSongs();
 
   MusicProvider() {
+    AudioPlayer.global.setAudioContext(AudioContextConfig(
+      respectSilence: false,
+      stayAwake: true,
+    ).build());
+
     _audioPlayer.onPlayerStateChanged.listen((state) {
       _isPlaying = state == PlayerState.playing;
       notifyListeners();
@@ -56,8 +61,8 @@ class MusicProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> playSong(Song song) async {
-    if (_currentSong?.title == song.title && _isPlaying) {
+  Future<void> playSong(Song song, {bool forcePlay = false}) async {
+    if (!forcePlay && _currentSong?.title == song.title && _isPlaying) {
       await pause();
     } else {
       _currentSong = song;
@@ -113,10 +118,10 @@ class MusicProvider extends ChangeNotifier {
       final randomIndex = (songs.length > 1)
           ? (DateTime.now().millisecondsSinceEpoch % songs.length)
           : 0;
-      await playSong(songs[randomIndex]);
+      await playSong(songs[randomIndex], forcePlay: true);
     } else {
       _currentIndex = (_currentIndex + 1) % songs.length;
-      await playSong(songs[_currentIndex]);
+      await playSong(songs[_currentIndex], forcePlay: true);
     }
   }
 
@@ -129,7 +134,7 @@ class MusicProvider extends ChangeNotifier {
       await seek(Duration.zero);
     } else {
       _currentIndex = (_currentIndex - 1 + songs.length) % songs.length;
-      await playSong(songs[_currentIndex]);
+      await playSong(songs[_currentIndex], forcePlay: true);
     }
   }
 
