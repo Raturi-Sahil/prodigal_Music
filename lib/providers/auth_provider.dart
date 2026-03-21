@@ -28,13 +28,35 @@ class AuthProvider extends ChangeNotifier {
         return;
       }
 
-      // Token exists — verify it by fetching the current user
-      final user = await AuthService.fetchMe();
-      _setAuthenticated(user);
-    } catch (_) {
-      // Token is invalid or expired and refresh also failed
-      await TokenStorage.clearAll();
-      _setUnauthenticated();
+      // Check if we have cached user data — restore session instantly
+      final userId = await TokenStorage.getUserId();
+      final email = await TokenStorage.getUserEmail();
+      final displayName = await TokenStorage.getUserDisplayName();
+
+      if (userId != null && email != null && displayName != null) {
+        _setAuthenticated(User(
+          id: userId,
+          email: email,
+          displayName: displayName,
+        ));
+        return;
+      }
+
+      // No cached user data — try fetching from server
+      try {
+        final user = await AuthService.fetchMe();
+        await TokenStorage.saveUser(
+          userId: user.id,
+          email: user.email,
+          displayName: user.displayName,
+        );
+        _setAuthenticated(user);
+      } catch (_) {
+        // /v1/me failed but we still have a token — don't clear it
+        // User will need to re-login only if API calls start returning 401
+        await TokenStorage.clearAll();
+        _setUnauthenticated();
+      }
     } finally {
       _setLoading(false);
     }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
+import '../providers/auth_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -7,6 +9,8 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final auth = context.watch<AuthProvider>();
+    final user = auth.user;
 
     return Container(
       color: AppColors.background,
@@ -25,15 +29,15 @@ class ProfileScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withOpacity(0.8),
-                      AppColors.primary.withOpacity(0.3),
+                      AppColors.primary.withValues(alpha: 0.8),
+                      AppColors.primary.withValues(alpha: 0.3),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -52,18 +56,18 @@ class ProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Dhanur Music',
-                style: TextStyle(
+              Text(
+                user?.displayName ?? 'Dhanur Music',
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Premium Subscriber',
-                style: TextStyle(
+              Text(
+                user?.email ?? '',
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -86,17 +90,9 @@ class ProfileScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildStat('248', 'Liked'),
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: AppColors.surfaceLight,
-                    ),
+                    Container(width: 1, height: 40, color: AppColors.surfaceLight),
                     _buildStat('6', 'Playlists'),
-                    Container(
-                      width: 1,
-                      height: 40,
-                      color: AppColors.surfaceLight,
-                    ),
+                    Container(width: 1, height: 40, color: AppColors.surfaceLight),
                     _buildStat('12', 'Following'),
                   ],
                 ),
@@ -112,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: AppColors.textHint.withOpacity(0.4),
+                      color: AppColors.textHint.withValues(alpha: 0.4),
                     ),
                   ),
                   child: const Center(
@@ -130,20 +126,67 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 36),
 
               // Settings list
-              _buildSettingsTile(Icons.history_rounded, 'Listening History'),
-              _buildSettingsTile(Icons.download_rounded, 'Downloads'),
-              _buildSettingsTile(Icons.equalizer_rounded, 'Audio Quality'),
-              _buildSettingsTile(Icons.dark_mode_rounded, 'Appearance'),
-              _buildSettingsTile(Icons.notifications_outlined, 'Notifications'),
-              _buildSettingsTile(Icons.privacy_tip_outlined, 'Privacy'),
-              _buildSettingsTile(Icons.info_outline_rounded, 'About'),
-              _buildSettingsTile(Icons.logout_rounded, 'Log Out',
-                  isDestructive: true),
+              _buildSettingsTile(context, Icons.history_rounded, 'Listening History'),
+              _buildSettingsTile(context, Icons.download_rounded, 'Downloads'),
+              _buildSettingsTile(context, Icons.equalizer_rounded, 'Audio Quality'),
+              _buildSettingsTile(context, Icons.dark_mode_rounded, 'Appearance'),
+              _buildSettingsTile(context, Icons.notifications_outlined, 'Notifications'),
+              _buildSettingsTile(context, Icons.privacy_tip_outlined, 'Privacy'),
+              _buildSettingsTile(context, Icons.info_outline_rounded, 'About'),
+              _buildSettingsTile(
+                context,
+                Icons.logout_rounded,
+                'Log Out',
+                isDestructive: true,
+                onTap: () => _handleLogout(context),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Log Out',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          'Are you sure you want to log out?',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(
+              'Log Out',
+              style: TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    await context.read<AuthProvider>().logout();
+
+    if (!context.mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
   }
 
   Widget _buildStat(String value, String label) {
@@ -169,20 +212,26 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsTile(IconData icon, String title,
-      {bool isDestructive = false}) {
+  Widget _buildSettingsTile(
+    BuildContext context,
+    IconData icon,
+    String title, {
+    bool isDestructive = false,
+    VoidCallback? onTap,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              color: AppColors.surfaceLight.withOpacity(0.5),
+              color: AppColors.surfaceLight.withValues(alpha: 0.5),
               width: 0.5,
             ),
           ),
         ),
         child: ListTile(
+          onTap: onTap,
           leading: Icon(
             icon,
             color: isDestructive ? Colors.redAccent : AppColors.textSecondary,
