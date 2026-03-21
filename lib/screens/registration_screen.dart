@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
+import '../providers/auth_provider.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/gradient_button.dart';
 
@@ -18,6 +20,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   late AnimationController _animController;
   late Animation<Offset> _slideAnimation;
@@ -56,7 +59,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
     super.dispose();
   }
 
-  void _handleRegister() {
+  Future<void> _handleRegister() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -93,18 +96,33 @@ class _RegistrationScreenState extends State<RegistrationScreen>
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Registration coming soon! Please login.'),
-        backgroundColor: AppColors.accentGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
+    setState(() => _isLoading = true);
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.register(
+      email: email,
+      password: password,
+      displayName: name,
     );
 
-    Navigator.pop(context);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(auth.errorMessage ?? 'Registration failed. Please try again.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -243,6 +261,7 @@ class _RegistrationScreenState extends State<RegistrationScreen>
                     GradientButton(
                       text: 'REGISTER',
                       onPressed: _handleRegister,
+                      isLoading: _isLoading,
                     ),
                     const SizedBox(height: 28),
                     // Login link

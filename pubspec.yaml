@@ -38,6 +38,8 @@ dependencies:
   audio_service: ^0.18.15
   palette_generator: ^0.3.3+4
   provider: ^6.1.2
+  http: ^1.2.1
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:
