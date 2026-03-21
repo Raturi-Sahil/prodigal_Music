@@ -30,11 +30,7 @@ Future<void> initAudioService() async {
   }
 }
 
-<<<<<<< HEAD
-void main() {
-=======
 void main() async {
->>>>>>> 038f1b2cac73186a1d221aac2c515870a1344250
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
@@ -44,16 +40,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
-    return ChangeNotifierProvider(
-      create: (_) => MusicProvider(),
-=======
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MusicProvider()),
       ],
->>>>>>> 038f1b2cac73186a1d221aac2c515870a1344250
       child: MaterialApp(
         title: 'Dhanur Music',
         theme: ThemeData(
