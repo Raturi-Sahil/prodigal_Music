@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'providers/music_provider.dart';
 import 'providers/auth_provider.dart';
@@ -10,6 +11,12 @@ import 'constants/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await JustAudioBackground.init(
+    androidNotificationChannelId:
+        'com.example.music_app_frontend.channel.audio',
+    androidNotificationChannelName: 'Music playback',
+    androidNotificationOngoing: true,
+  );
   runApp(const MyApp());
 }
 
@@ -53,4 +60,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
