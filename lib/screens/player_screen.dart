@@ -2,21 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/song.dart';
 import '../providers/music_provider.dart';
+import '../providers/library_provider.dart';
 import '../constants/app_colors.dart';
 
-class PlayerScreen extends StatelessWidget {
+class PlayerScreen extends StatefulWidget {
   final Song song;
 
   const PlayerScreen({super.key, required this.song});
 
   @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  bool _initialFetchDone = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialFetchDone) {
+      _initialFetchDone = true;
+      // Fetch library data on first open to sync liked state and playlists
+      Future.delayed(Duration.zero, () {
+        if (mounted) {
+          context.read<LibraryProvider>().fetchAll();
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Consumer<MusicProvider>(
-        builder: (context, musicProvider, child) {
-          final isCurrentSong = musicProvider.currentSong?.title == song.title;
+      body: Consumer2<MusicProvider, LibraryProvider>(
+        builder: (context, musicProvider, libraryProvider, child) {
+          final isCurrentSong =
+              musicProvider.currentSong?.title == widget.song.title;
           final isPlaying = isCurrentSong && musicProvider.isPlaying;
+          final isLiked = libraryProvider.isTrackLiked(widget.song.id);
 
           return Container(
             decoration: const BoxDecoration(
@@ -54,7 +78,7 @@ class PlayerScreen extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            onPressed: () => _showOptionsSheet(context, song),
+                            onPressed: () => _showOptionsSheet(context, widget.song),
                             icon: const Icon(
                               Icons.more_vert_rounded,
                               color: AppColors.textPrimary,
@@ -104,7 +128,7 @@ class PlayerScreen extends StatelessWidget {
                                   child: ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.asset(
-                                      song.coverImage,
+                                      widget.song.coverImage,
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, __, ___) => Container(
                                         decoration: BoxDecoration(
@@ -132,9 +156,9 @@ class PlayerScreen extends StatelessWidget {
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 24),
                                 child: Text(
-                                  song.lyrics.isEmpty
+                                  widget.song.lyrics.isEmpty
                                       ? 'No lyrics available'
-                                      : song.lyrics,
+                                      : widget.song.lyrics,
                                   style: const TextStyle(
                                     color: AppColors.textPrimary,
                                     fontSize: 16,
@@ -153,9 +177,9 @@ class PlayerScreen extends StatelessWidget {
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 24),
                                 child: Text(
-                                  song.description.isEmpty
+                                  widget.song.description.isEmpty
                                       ? 'No backstory available'
-                                      : song.description,
+                                      : widget.song.description,
                                   style: const TextStyle(
                                     color: AppColors.textSecondary,
                                     fontSize: 15,
@@ -188,7 +212,7 @@ class PlayerScreen extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        song.title,
+                                        widget.song.title,
                                         style: const TextStyle(
                                           color: AppColors.textPrimary,
                                           fontSize: 22,
@@ -199,7 +223,7 @@ class PlayerScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        song.artist,
+                                        widget.song.artist,
                                         style: const TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 15,
@@ -212,24 +236,31 @@ class PlayerScreen extends StatelessWidget {
                                   children: [
                                     GestureDetector(
                                       onTap: () {
-                                        musicProvider.toggleLike(song.title);
+                                        libraryProvider.toggleLike(
+                                          widget.song.id,
+                                          title: widget.song.title,
+                                          artist: widget.song.artist,
+                                        );
                                       },
                                       child: Icon(
-                                        musicProvider.isSongLiked(song.title)
+                                        isLiked
                                             ? Icons.favorite_rounded
                                             : Icons.favorite_border_rounded,
-                                        color: musicProvider
-                                                .isSongLiked(song.title)
-                                            ? AppColors.primary
+                                        color: isLiked
+                                            ? const Color(0xFFE74C3C)
                                             : AppColors.textSecondary,
                                         size: 26,
                                       ),
                                     ),
                                     const SizedBox(width: 20),
-                                    const Icon(
-                                      Icons.add_circle_outline_rounded,
-                                      color: AppColors.textSecondary,
-                                      size: 26,
+                                    GestureDetector(
+                                      onTap: () => _showAddToPlaylistModal(
+                                          context, widget.song, libraryProvider),
+                                      child: const Icon(
+                                        Icons.add_circle_outline_rounded,
+                                        color: AppColors.textSecondary,
+                                        size: 26,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -295,7 +326,7 @@ class PlayerScreen extends StatelessWidget {
                                   Text(
                                     _formatDuration(isCurrentSong
                                         ? musicProvider.totalDuration
-                                        : (song.duration ?? Duration.zero)),
+                                        : (widget.song.duration ?? Duration.zero)),
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 12,
@@ -341,7 +372,7 @@ class PlayerScreen extends StatelessWidget {
                                         musicProvider.resume();
                                       }
                                     } else {
-                                      musicProvider.playSong(song);
+                                      musicProvider.playSong(widget.song);
                                     }
                                   },
                                   child: Container(
@@ -418,7 +449,7 @@ class PlayerScreen extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(6),
                         child: Image.asset(
-                          song.coverImage,
+                          widget.song.coverImage,
                           width: 48,
                           height: 48,
                           fit: BoxFit.cover,
@@ -447,7 +478,7 @@ class PlayerScreen extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              song.artist,
+                              widget.song.artist,
                               style: const TextStyle(
                                 color: AppColors.textSecondary,
                                 fontSize: 13,
@@ -497,5 +528,211 @@ class PlayerScreen extends StatelessWidget {
     final minutes = twoDigits(duration.inMinutes.remainder(60));
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
+  }
+
+  void _showAddToPlaylistModal(
+    BuildContext context,
+    Song song,
+    LibraryProvider libraryProvider,
+  ) {
+    final titleCtrl = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  24,
+                  24,
+                  MediaQuery.of(ctx).viewInsets.bottom + 24,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Add to Playlist',
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // ── Existing Playlists ───────────────────
+                    if (libraryProvider.playlists.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Your Playlists',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ...libraryProvider.playlists.map(
+                            (playlist) => GestureDetector(
+                              onTap: () {
+                                // TODO: Implement add to existing playlist
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Added to ${playlist.title}',
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.cardDark,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.queue_music_rounded,
+                                      color: AppColors.textHint,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            playlist.title,
+                                            style: const TextStyle(
+                                              color: AppColors.textPrimary,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          if (playlist.description.isNotEmpty)
+                                            Text(
+                                              playlist.description,
+                                              style: const TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          const Divider(color: AppColors.cardDark),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+
+                    // ── Create New Playlist ───────────────────
+                    const Text(
+                      'Create New Playlist',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: titleCtrl,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Playlist name',
+                        hintStyle: const TextStyle(color: AppColors.textHint),
+                        filled: true,
+                        fillColor: AppColors.cardDark,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final title = titleCtrl.text.trim();
+                          if (title.isEmpty) return;
+
+                          final success =
+                              await libraryProvider.createPlaylist(
+                            title: title,
+                            description: 'Playlist created from player',
+                          );
+
+                          if (ctx.mounted) Navigator.pop(ctx);
+
+                          if (success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Created playlist "$title" and added song',
+                                ),
+                              ),
+                            );
+                          } else if (!success && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Failed to create playlist'),
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Create & Add',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

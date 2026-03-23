@@ -12,4 +12,12 @@ class ApiConstants {
   static const String refresh = '/v1/auth/refresh';
   static const String logout = '/v1/auth/logout';
   static const String me = '/v1/me';
+
+  // ── Library endpoints ──────────────────────────────────
+  static const String library = '/v1/library';
+  static const String playlists = '/v1/playlists';
+  static const String recentlyPlayed = '/v1/recently-played';
+
+  /// Returns the like/unlike path for a specific track.
+  static String trackLike(String trackId) => '/v1/tracks/$trackId/like';
 }

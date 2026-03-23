@@ -36,11 +36,22 @@ class ApiClient {
     });
   }
 
-  /// POST with no body (e.g., logout)
+  /// POST with no body (e.g., logout, like track)
   static Future<http.Response> postNoBody(String path) async {
     return _executeWithRetry(() async {
       final token = await TokenStorage.getAccessToken();
       return http.post(
+        Uri.parse('${ApiConstants.baseUrl}$path'),
+        headers: _headers(token),
+      );
+    });
+  }
+
+  /// DELETE (e.g., unlike track)
+  static Future<http.Response> delete(String path) async {
+    return _executeWithRetry(() async {
+      final token = await TokenStorage.getAccessToken();
+      return http.delete(
         Uri.parse('${ApiConstants.baseUrl}$path'),
         headers: _headers(token),
       );

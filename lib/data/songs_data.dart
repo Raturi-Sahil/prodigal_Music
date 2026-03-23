@@ -4,6 +4,7 @@ class SongsData {
   static List<Song> getAllSongs() {
     return [
       Song(
+        id: 'track_ashes_of_crown_001',
         title: 'Ashes of the Crown',
         artist: 'Metal Legends',
         genre: 'Metal',
