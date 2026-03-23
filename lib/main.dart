@@ -3,6 +3,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
 import 'providers/music_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/library_provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MusicProvider()),
+        ChangeNotifierProvider(create: (_) => LibraryProvider()),
       ],
       child: MaterialApp(
         title: 'Dhanur Music',
